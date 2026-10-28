@@ -20,13 +20,14 @@ export default function SearchPage() {
   const [selectedStart, setSelectedStart] = useState<TransitSearchItem | null>(null);
   const [selectedEnd, setSelectedEnd] = useState<TransitSearchItem | null>(null);
 
-  // 지하철 노선번호 선택 및 버스 정류소명 선택 상태
-  const [selectedSubwayLine, setSelectedSubwayLine] = useState<string>('2호선');
-  const [selectedBusStationName, setSelectedBusStationName] = useState<string>('선릉역정류소');
+  // 지하철 노선 선택 및 버스 번호 선택 상태 (기본값 가양역 9호선 및 601번 반영)
+  const [selectedSubwayLine, setSelectedSubwayLine] = useState<string>('9호선');
+  const [selectedBusNo, setSelectedBusNo] = useState<string>('601');
+  const [selectedBusStationName, setSelectedBusStationName] = useState<string>('염창역정류소');
 
   const [departureTime, setDepartureTime] = useState<string>('08:10');
-  const [arrivalTime, setArrivalTime] = useState<string>('08:55');
-  const [walkTimeMinutes, setWalkTimeMinutes] = useState<number>(7);
+  const [arrivalTime, setArrivalTime] = useState<string>('08:35');
+  const [walkTimeMinutes, setWalkTimeMinutes] = useState<number>(5);
 
   const [isStartSearching, setIsStartSearching] = useState<boolean>(false);
   const [isEndSearching, setIsEndSearching] = useState<boolean>(false);
@@ -88,6 +89,9 @@ export default function SearchPage() {
   const handleSelectEnd = (item: TransitSearchItem) => {
     setSelectedEnd(item);
     setEndKeyword(item.stationName);
+    if (item.routeNo) {
+      setSelectedBusNo(item.routeNo);
+    }
     if (item.stationName) {
       setSelectedBusStationName(`${item.stationName}정류소`);
     }
@@ -117,23 +121,24 @@ export default function SearchPage() {
       {
         type: 'walk',
         name: '도보 이동',
+        durationMinutes: walkTimeMinutes,
         stations: []
       },
       {
         type: 'subway',
         name: `지하철 ${selectedSubwayLine}`,
         startStation: startName,
-        endStation: '선릉역',
+        endStation: '염창역',
         lineNo: selectedSubwayLine,
-        stations: [startName, '역삼역', '선릉역']
+        stations: [startName, '증미역', '염창역']
       },
       {
         type: 'bus',
-        name: '9000번 버스',
+        name: `${selectedBusNo}번 버스`,
         startStation: selectedBusStationName,
         endStation: endName,
-        stationName: selectedBusStationName,
-        stations: [selectedBusStationName, '한티역', endName]
+        busNo: selectedBusNo,
+        stations: [selectedBusStationName, '당산역', endName]
       }
     ];
 
@@ -142,7 +147,7 @@ export default function SearchPage() {
       startName,
       endName,
       departureTime: departureTime.trim() || '08:10',
-      arrivalTime: arrivalTime.trim() || '08:55',
+      arrivalTime: arrivalTime.trim() || '08:35',
       walkTimeMinutes: Number(walkTimeMinutes),
       isNotificationOn: true,
       segments,
@@ -168,7 +173,7 @@ export default function SearchPage() {
                 type="text"
                 value={routeName}
                 onChange={(e) => setRouteName(e.target.value)}
-                placeholder="예: 회사 출근길"
+                placeholder="예: 출근길"
                 className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
               />
             </div>
@@ -196,14 +201,14 @@ export default function SearchPage() {
                   type="text"
                   value={arrivalTime}
                   onChange={(e) => setArrivalTime(e.target.value)}
-                  placeholder="08:55"
+                  placeholder="08:35"
                   className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm text-[#0F172A]"
                 />
               </div>
             </div>
           </div>
 
-          {/* 상세 검색 폼: 지하철 노선번호 선택 및 버스 정류소명 선택 반영 */}
+          {/* 상세 검색 폼: 지하철 노선 선택 셀렉트박스 및 버스 번호 선택 기능 */}
           <div className="bg-white border border-[#E2E8F0] rounded-[12px] p-4 shadow-sm space-y-4 relative">
             <div>
               <label htmlFor="startInput" className="block text-sm font-bold text-[#0F172A] mb-1">
@@ -218,7 +223,7 @@ export default function SearchPage() {
                     setStartKeyword(e.target.value);
                     if (selectedStart) setSelectedStart(null);
                   }}
-                  placeholder="역명 입력 (예: 강남역)"
+                  placeholder="역명 입력 (예: 가양역)"
                   required
                   aria-label="출발지 역명"
                   className="w-full pl-10 pr-4 py-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
@@ -250,24 +255,22 @@ export default function SearchPage() {
               )}
             </div>
 
-            {/* 지하철 노선번호 선택 셀렉트박스 */}
+            {/* 지하철 노선 선택 셀렉트박스 */}
             <div>
               <label htmlFor="subwayLineSelect" className="block text-xs font-bold text-[#64748B] mb-1 flex items-center space-x-1">
                 <Train className="w-4 h-4 text-[#2563EB]" />
-                <span>지하철 노선번호 선택</span>
+                <span>지하철 노선 선택</span>
               </label>
               <select
                 id="subwayLineSelect"
                 value={selectedSubwayLine}
                 onChange={(e) => setSelectedSubwayLine(e.target.value)}
-                aria-label="지하철 노선번호"
+                aria-label="지하철 노선 선택"
                 className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
               >
                 <option value="1호선">1호선</option>
                 <option value="2호선">2호선</option>
-                <option value="3호선">3호선</option>
-                <option value="4호선">4호선</option>
-                <option value="5호선">5호선</option>
+                <option value="9호선">9호선</option>
                 <option value="신분당선">신분당선</option>
                 <option value="수인분당선">수인분당선</option>
                 <option value="공항철도">공항철도</option>
@@ -276,7 +279,7 @@ export default function SearchPage() {
 
             <div className="pt-2 border-t border-gray-100">
               <label htmlFor="endInput" className="block text-sm font-bold text-[#0F172A] mb-1">
-                도착지 명칭 (버스 정류소/목적지)
+                도착지 명칭 (정류소명)
               </label>
               <div className="relative">
                 <input
@@ -287,7 +290,7 @@ export default function SearchPage() {
                     setEndKeyword(e.target.value);
                     if (selectedEnd) setSelectedEnd(null);
                   }}
-                  placeholder="정류소명 또는 도착지 입력 (예: 선릉역정류소)"
+                  placeholder="정류소명 입력 (예: 여의도환승센터)"
                   required
                   aria-label="도착지 명칭"
                   className="w-full pl-10 pr-4 py-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
@@ -319,21 +322,37 @@ export default function SearchPage() {
               )}
             </div>
 
-            {/* 버스 정류소명 직접 지정 인풋 */}
-            <div>
-              <label htmlFor="busStationInput" className="block text-xs font-bold text-[#64748B] mb-1 flex items-center space-x-1">
-                <BusIcon className="w-4 h-4 text-[#2563EB]" />
-                <span>버스 정류소명(또는 정류소 번호) 선택</span>
-              </label>
-              <input
-                id="busStationInput"
-                type="text"
-                value={selectedBusStationName}
-                onChange={(e) => setSelectedBusStationName(e.target.value)}
-                placeholder="예: 선릉역정류소 또는 23145"
-                aria-label="버스 정류소명"
-                className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
-              />
+            {/* 버스 번호 선택 기능 */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="busNoInput" className="block text-xs font-bold text-[#64748B] mb-1 flex items-center space-x-1">
+                  <BusIcon className="w-4 h-4 text-[#2563EB]" />
+                  <span>버스 번호</span>
+                </label>
+                <input
+                  id="busNoInput"
+                  type="text"
+                  value={selectedBusNo}
+                  onChange={(e) => setSelectedBusNo(e.target.value)}
+                  placeholder="예: 601"
+                  aria-label="버스 번호"
+                  className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
+                />
+              </div>
+              <div>
+                <label htmlFor="busStationInput" className="block text-xs font-bold text-[#64748B] mb-1">
+                  정류소명
+                </label>
+                <input
+                  id="busStationInput"
+                  type="text"
+                  value={selectedBusStationName}
+                  onChange={(e) => setSelectedBusStationName(e.target.value)}
+                  placeholder="예: 염창역정류소"
+                  aria-label="정류소명"
+                  className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
+                />
+              </div>
             </div>
           </div>
 

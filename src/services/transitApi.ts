@@ -12,10 +12,10 @@ export const searchTransitStations = async (keyword: string): Promise<TransitSea
     const term = keyword.trim();
     
     const mockDatabase: TransitSearchItem[] = [
-      { stationId: '122000001', stationName: '강남역', routeNo: '2호선', transportType: 'subway', direction: '내선순환' },
-      { stationId: '122000002', stationName: '선릉역', routeNo: '9000번', transportType: 'bus', direction: '판교 방면' },
-      { stationId: '133000010', stationName: '역삼역', routeNo: '2호선', transportType: 'subway', direction: '내선순환' },
-      { stationId: '144000005', stationName: '판교테크노밸리', routeNo: '9000번', transportType: 'bus', direction: '종로 방면' }
+      { stationId: '122000001', stationName: '가양역', routeNo: '9호선', transportType: 'subway', direction: '개화/김포공항 방면' },
+      { stationId: '122000002', stationName: '염창역', routeNo: '601번', transportType: 'bus', direction: '여의도 방면' },
+      { stationId: '133000010', stationName: '여의도역', routeNo: '9호선', transportType: 'subway', direction: '종합운동장 방면' },
+      { stationId: '144000005', stationName: '여의도환승센터', routeNo: '601', transportType: 'bus', direction: '도심 방면' }
     ];
 
     const results = mockDatabase.filter(
@@ -30,14 +30,14 @@ export const searchTransitStations = async (keyword: string): Promise<TransitSea
         {
           stationId: `station_${Date.now()}_1`,
           stationName: `${term}역`,
-          routeNo: '2호선',
+          routeNo: '9호선',
           transportType: 'subway',
           direction: '상행 방면'
         },
         {
           stationId: `station_${Date.now()}_2`,
           stationName: `${term}정류소`,
-          routeNo: '9000번',
+          routeNo: '601',
           transportType: 'bus',
           direction: '도심 방면'
         }
@@ -69,7 +69,7 @@ export const searchTransitStations = async (keyword: string): Promise<TransitSea
       {
         stationId: 'fallback_1',
         stationName: `${keyword} (임시 정류소)`,
-        routeNo: '기본버스',
+        routeNo: '601',
         transportType: 'bus',
         direction: '정방향'
       }
@@ -95,7 +95,7 @@ export const fetchArrivalInfo = async (routeId: string, walkTimeMinutes: number)
   return {
     routeId,
     departureTime: '08:10',
-    arrivalTime: '08:55',
+    arrivalTime: '08:35',
     remainingMinutes,
     remainingSeconds,
     remainingStations,

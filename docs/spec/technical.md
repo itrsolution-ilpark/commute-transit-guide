@@ -1,6 +1,6 @@
 # 출퇴근 대중교통 길잡이 — 기술·데이터 설계
 
-> 문서 버전 v14 · 완성도 100% · 마지막 수정 2026. 10. 28. 18시 31분 35초
+> 문서 버전 v15 · 완성도 100% · 마지막 수정 2026. 10. 28. 18시 37분 42초
 > 이 문서만 보고 AI(또는 개발자)가 개발해도 거의 같은 결과가 나오도록 작성되었습니다.
 
 ## 기본 정보
@@ -20,41 +20,41 @@
 - **저장 키**: `commute_routes`, `commute_settings`
 
 ### 1. 복합 경로 목록 (`commute_routes`)
-- 첫 방문 시 또는 로컬 스토리지가 비어 있을 경우, 아래의 초기 기본값(`route_1`)을 자동 삽입합니다.
+- 첫 방문 시 또는 로컬 스토리지가 비어 있을 경우, 아래의 초기 기본값(`route_1` - 가양역 9호선 반영)을 자동 삽입합니다.
 
 ```json
 [
   {
     "id": "route_1",
-    "name": "회사 출근길",
-    "startName": "자택",
-    "endName": "회사",
+    "name": "출근길",
+    "startName": "가양역",
+    "endName": "여의도역",
     "departureTime": "08:10",
-    "arrivalTime": "08:55",
-    "walkTimeMinutes": 7,
+    "arrivalTime": "08:35",
+    "walkTimeMinutes": 5,
     "isNotificationOn": true,
     "segments": [
       {
         "type": "walk",
         "name": "도보 이동",
-        "durationMinutes": 7,
+        "durationMinutes": 5,
         "stations": []
       },
       {
         "type": "subway",
-        "name": "지하철 2호선",
-        "startStation": "강남역",
-        "endStation": "선릉역",
-        "lineNo": "2호선",
-        "stations": ["강남역", "역삼역", "선릉역"]
+        "name": "지하철 9호선",
+        "startStation": "가양역",
+        "endStation": "염창역",
+        "lineNo": "9호선",
+        "stations": ["가양역", "증미역", "염창역"]
       },
       {
         "type": "bus",
-        "name": "9000번 버스",
-        "startStation": "선릉역정류소",
-        "endStation": "판교테크노밸리",
-        "stationName": "선릉역정류소",
-        "stations": ["선릉역정류소", "한티역", "판교테크노밸리"]
+        "name": "601번 버스",
+        "startStation": "염창역정류소",
+        "endStation": "여의도환승센터",
+        "busNo": "601",
+        "stations": ["염창역정류소", "당산역", "여의도환승센터"]
       }
     ],
     "createdAt": "2026-03-30T08:00:00.000Z",
@@ -71,7 +71,7 @@ interface TransitSegment {
   startStation?: string;
   endStation?: string;
   lineNo?: string;
-  stationName?: string;
+  busNo?: string;
   stations: string[];
 }
 
@@ -147,6 +147,7 @@ VITE_PUBLIC_TRANSIT_API_KEY=
 
 | 버전 | 일시 | 변경 내용 |
 | --- | --- | --- |
+| v15 | 2026. 10. 28. 18시 37분 10초 | 출발/도착지 입력 시 지하철 노선과 버스 번호 직접 선택 기능 강화 및 '가양역' 지하철 노선을 9호선으로 전면 수정 |
 | v14 | 2026. 10. 28. 18시 31분 16초 | 최종 감수: 최종 감수 완료: 지하철 역명 검색 시 노선번호 선택 기능, 버스 정류소명 선택 기능을 기능 명세, 화면 명세, 데이터 모델, 테스트 시나리오 전반에 일관되게 반영하고 기술/품질 기준을 확정했습니다. |
 | v13 | 2026. 10. 28. 18시 31분 9초 | 지하철 역명 검색 시 노선번호 추가 선택 및 버스 정류소 검색 시 정류소명 선택 기능 반영 |
 | v12 | 2026. 10. 28. 18시 27분 14초 | 버스/지하철 복합 경로 추적, 출발/도착 시각 표시, 상세 경로 내 교통수단별(버스/지하철) 구분 및 정차역 목록 표시 기능 반영 |

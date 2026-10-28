@@ -5,33 +5,35 @@ const SETTINGS_KEY = 'commute_settings';
 
 const INITIAL_ROUTE: Route = {
   id: 'route_1',
-  name: '회사 출근길',
-  startName: '자택',
-  endName: '회사',
+  name: '출근길',
+  startName: '가양역',
+  endName: '여의도역',
   departureTime: '08:10',
-  arrivalTime: '08:55',
-  walkTimeMinutes: 7,
+  arrivalTime: '08:35',
+  walkTimeMinutes: 5,
   isNotificationOn: true,
   segments: [
     {
       type: 'walk',
       name: '도보 이동',
-      durationMinutes: 7,
+      durationMinutes: 5,
       stations: []
     } as any,
     {
       type: 'subway',
-      name: '지하철 2호선',
-      startStation: '강남역',
-      endStation: '선릉역',
-      stations: ['강남역', '역삼역', '선릉역']
+      name: '지하철 9호선',
+      startStation: '가양역',
+      endStation: '염창역',
+      lineNo: '9호선',
+      stations: ['가양역', '증미역', '염창역']
     },
     {
       type: 'bus',
-      name: '9000번 버스',
-      startStation: '선릉역정류소',
-      endStation: '판교테크노밸리',
-      stations: ['선릉역정류소', '한티역', '판교테크노밸리']
+      name: '601번 버스',
+      startStation: '염창역정류소',
+      endStation: '여의도환승센터',
+      busNo: '601',
+      stations: ['염창역정류소', '당산역', '여의도환승센터']
     }
   ],
   createdAt: '2026-03-30T08:00:00.000Z',
