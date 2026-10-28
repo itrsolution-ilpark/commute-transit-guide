@@ -1,16 +1,23 @@
-export type TransportType = 'bus' | 'subway';
+export type TransportType = 'walk' | 'subway' | 'bus';
+
+export interface TransitSegment {
+  type: TransportType;
+  name: string;
+  startStation?: string;
+  endStation?: string;
+  stations: string[];
+}
 
 export interface Route {
   id: string;
   name: string;
   startName: string;
-  startStationId: string;
   endName: string;
-  endStationId: string;
-  transportType: TransportType;
-  routeNo: string;
+  departureTime: string;
+  arrivalTime: string;
   walkTimeMinutes: number;
   isNotificationOn: boolean;
+  segments: TransitSegment[];
   createdAt: string;
   updatedAt: string;
 }
@@ -22,6 +29,8 @@ export interface Settings {
 
 export interface TransitArrivalInfo {
   routeId: string;
+  departureTime: string;
+  arrivalTime: string;
   remainingMinutes: number;
   remainingSeconds: number;
   remainingStations: number;

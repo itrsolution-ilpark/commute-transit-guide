@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Bus, Train, Bell, BellOff, Edit3, Save, Trash2, Footprints, Clock, MapPin, ArrowLeft } from 'lucide-react';
+import { Bell, BellOff, Edit3, Save, Trash2, ArrowLeft } from 'lucide-react';
 import { Route, TransitArrivalInfo } from '../types';
 import { getRouteById, updateRoute, deleteRoute } from '../services/storage';
 import { fetchArrivalInfo } from '../services/transitApi';
 import { requestNotificationPermission, sendTransitNotification } from '../services/notification';
-import Header from '../components/Header';
 import Timeline from '../components/Timeline';
 import Toast from '../components/Toast';
 
@@ -19,7 +18,8 @@ export default function DetailPage() {
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
   const [nameInput, setNameInput] = useState<string>('');
-  const [routeNoInput, setRouteNoInput] = useState<string>('');
+  const [departureTimeInput, setDepartureTimeInput] = useState<string>('');
+  const [arrivalTimeInput, setArrivalTimeInput] = useState<string>('');
   const [walkTimeInput, setWalkTimeInput] = useState<number>(7);
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -33,7 +33,8 @@ export default function DetailPage() {
       if (found) {
         setRoute(found);
         setNameInput(found.name);
-        setRouteNoInput(found.routeNo);
+        setDepartureTimeInput(found.departureTime || '08:10');
+        setArrivalTimeInput(found.arrivalTime || '08:55');
         setWalkTimeInput(found.walkTimeMinutes);
       }
     }
@@ -50,7 +51,7 @@ export default function DetailPage() {
         !hasNotified &&
         data.remainingMinutes <= route.walkTimeMinutes
       ) {
-        sendTransitNotification(route.name, route.routeNo, data.remainingMinutes);
+        sendTransitNotification(route.name, data.remainingMinutes);
         setHasNotified(true);
       }
     } catch (error) {
@@ -74,7 +75,16 @@ export default function DetailPage() {
   if (!route) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
-        <Header title="경로 상세" showBack={true} />
+        <header className="sticky top-0 z-50 h-[56px] bg-[#2563EB] text-white flex items-center px-4 shadow-md">
+          <button
+            onClick={() => navigate('/')}
+            aria-label="뒤로가기"
+            className="flex items-center justify-center w-11 h-11 rounded-lg hover:bg-blue-700 transition-colors mr-2"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          <h1 className="text-[18px] font-bold tracking-tight">경로 상세</h1>
+        </header>
         <div className="flex-1 flex flex-col items-center justify-center p-4">
           <p className="text-sm text-[#64748B] mb-4">해당 경로를 찾을 수 없습니다.</p>
           <button
@@ -96,7 +106,8 @@ export default function DetailPage() {
   const handleSaveEdit = () => {
     const updated = updateRoute(route.id, {
       name: nameInput.trim() || route.name,
-      routeNo: routeNoInput.trim() || route.routeNo,
+      departureTime: departureTimeInput.trim() || route.departureTime,
+      arrivalTime: arrivalTimeInput.trim() || route.arrivalTime,
       walkTimeMinutes: Number(walkTimeInput),
     });
 
@@ -190,14 +201,25 @@ export default function DetailPage() {
                 className="w-full px-3 py-2 border border-[#CBD5E1] rounded-lg text-sm text-[#0F172A]"
               />
             </div>
-            <div>
-              <label className="block text-xs font-bold text-[#64748B] mb-1">노선 번호/명</label>
-              <input
-                type="text"
-                value={routeNoInput}
-                onChange={(e) => setRouteNoInput(e.target.value)}
-                className="w-full px-3 py-2 border border-[#CBD5E1] rounded-lg text-sm text-[#0F172A]"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-[#64748B] mb-1">출발 시각</label>
+                <input
+                  type="text"
+                  value={departureTimeInput}
+                  onChange={(e) => setDepartureTimeInput(e.target.value)}
+                  className="w-full px-3 py-2 border border-[#CBD5E1] rounded-lg text-sm text-[#0F172A]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#64748B] mb-1">도착 시각</label>
+                <input
+                  type="text"
+                  value={arrivalTimeInput}
+                  onChange={(e) => setArrivalTimeInput(e.target.value)}
+                  className="w-full px-3 py-2 border border-[#CBD5E1] rounded-lg text-sm text-[#0F172A]"
+                />
+              </div>
             </div>
             <div>
               <label className="block text-xs font-bold text-[#64748B] mb-1">
@@ -215,23 +237,12 @@ export default function DetailPage() {
           </div>
         )}
 
-        {/* 실시간 상태 요약 카드 */}
+        {/* 실시간 요약 카드 */}
         <div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-[12px] p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
-            <span
-              className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${
-                route.transportType === 'bus'
-                  ? 'bg-blue-100 text-[#2563EB]'
-                  : 'bg-emerald-100 text-[#10B981]'
-              }`}
-            >
-              {route.transportType === 'bus' ? (
-                <Bus className="w-3.5 h-3.5 mr-1" />
-              ) : (
-                <Train className="w-3.5 h-3.5 mr-1" />
-              )}
-              {route.routeNo}
-            </span>
+            <div className="text-sm font-bold text-[#0F172A]">
+              출발: {route.departureTime} ➔ 도착: {route.arrivalTime}
+            </div>
 
             <button
               onClick={handleToggleNotification}
@@ -268,7 +279,7 @@ export default function DetailPage() {
           </div>
 
           <div className="flex items-center justify-between text-xs text-[#64748B] pt-2 border-t border-[#E2E8F0]">
-            <span>설정 도보 소요 시간: <strong className="text-[#0F172A]">{route.walkTimeMinutes}분</strong></span>
+            <span>도보 소요 시간: <strong className="text-[#0F172A]">{route.walkTimeMinutes}분</strong></span>
             <button
               onClick={handleRefresh}
               className="text-[#2563EB] font-bold hover:underline min-h-[44px] flex items-center"
@@ -278,10 +289,10 @@ export default function DetailPage() {
           </div>
         </div>
 
-        {/* 정류장 타임라인 */}
+        {/* 상세 경로 구간 리스트 (타임라인) */}
         <Timeline route={route} arrivalInfo={arrivalInfo} />
 
-        {/* 경로 삭제 텍스트 버튼 */}
+        {/* 하단 [경로 삭제] 버튼 */}
         <div className="flex justify-center pt-4">
           <button
             onClick={() => setShowDeleteModal(true)}

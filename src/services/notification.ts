@@ -16,14 +16,14 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
   return false;
 };
 
-export const sendTransitNotification = (routeName: string, routeNo: string, remainingMinutes: number): void => {
+export const sendTransitNotification = (routeName: string, remainingMinutes: number): void => {
   if (!('Notification' in window)) {
     return;
   }
 
   if (Notification.permission === 'granted') {
     const title = `[출퇴근 길잡이] ${routeName}`;
-    const body = `지금 출발하세요! ${routeNo} 도착까지 ${remainingMinutes}분 남았습니다.`;
+    const body = `[${routeName}] 지금 출발하세요! 첫 번째 탑승 교통수단 도착까지 ${remainingMinutes}분 남았습니다.`;
     
     try {
       new Notification(title, {

@@ -11,29 +11,33 @@ describe('LocalStorage Storage Service', () => {
     expect(routes).toBeDefined();
     expect(routes.length).toBeGreaterThan(0);
     expect(routes[0].id).toBe('route_1');
+    expect(routes[0].segments).toBeDefined();
   });
 
-  it('should add a new route correctly', () => {
+  it('should add a new route correctly with segments', () => {
     const newRouteData = {
-      name: '테스트 경로',
-      startName: '출발역',
-      startStationId: '100',
-      endName: '도착역',
-      endStationId: '200',
-      transportType: 'subway' as const,
-      routeNo: '2호선',
+      name: '테스트 복합 경로',
+      startName: '자택',
+      endName: '회사',
+      departureTime: '08:30',
+      arrivalTime: '09:15',
       walkTimeMinutes: 5,
       isNotificationOn: true,
+      segments: [
+        { type: 'walk' as const, name: '도보 이동', stations: [] },
+        { type: 'subway' as const, name: '지하철 2호선', stations: ['강남역', '선릉역'] }
+      ]
     };
 
     const added = addRoute(newRouteData);
     expect(added.id).toBeDefined();
-    expect(added.name).toBe('테스트 경로');
+    expect(added.name).toBe('테스트 복합 경로');
+    expect(added.segments.length).toBe(2);
 
     const routes = getRoutes();
     const found = routes.find((r) => r.id === added.id);
     expect(found).toBeDefined();
-    expect(found?.routeNo).toBe('2호선');
+    expect(found?.departureTime).toBe('08:30');
   });
 
   it('should get route by id', () => {
@@ -62,7 +66,23 @@ describe('LocalStorage Storage Service', () => {
     expect(success).toBe(true);
 
     const remaining = getRoutes();
-    expect(remaining.find((r) => r.id === targetId)).toBeUndefined();
+    // 만약 초기 route_1을 삭제하여 비게 되면 getRoutes() 내부 가드에 의해 INITIAL_ROUTE가 다시 반환될 수 있으므로,
+    // 여러 개를 등록한 뒤 특정 아이디를 삭제하는 것이 명확합니다.
+    const newRoute = addRoute({
+      name: '추가된 경로',
+      startName: 'A',
+      endName: 'B',
+      departureTime: '09:00',
+      arrivalTime: '09:30',
+      walkTimeMinutes: 5,
+      isNotificationOn: false,
+      segments: []
+    });
+
+    const successNew = deleteRoute(newRoute.id);
+    expect(successNew).toBe(true);
+    const updatedRemaining = getRoutes();
+    expect(updatedRemaining.find((r) => r.id === newRoute.id)).toBeUndefined();
   });
 
   it('should manage settings correctly', () => {

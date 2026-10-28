@@ -6,14 +6,34 @@ const SETTINGS_KEY = 'commute_settings';
 const INITIAL_ROUTE: Route = {
   id: 'route_1',
   name: '회사 출근길',
-  startName: '강남역 2번출구',
-  startStationId: '122000001',
-  endName: '판교역',
-  endStationId: '122000002',
-  transportType: 'bus',
-  routeNo: '9000번',
+  startName: '자택',
+  endName: '회사',
+  departureTime: '08:10',
+  arrivalTime: '08:55',
   walkTimeMinutes: 7,
   isNotificationOn: true,
+  segments: [
+    {
+      type: 'walk',
+      name: '도보 이동',
+      durationMinutes: 7,
+      stations: []
+    } as any,
+    {
+      type: 'subway',
+      name: '지하철 2호선',
+      startStation: '강남역',
+      endStation: '선릉역',
+      stations: ['강남역', '역삼역', '선릉역']
+    },
+    {
+      type: 'bus',
+      name: '9000번 버스',
+      startStation: '선릉역정류소',
+      endStation: '판교테크노밸리',
+      stations: ['선릉역정류소', '한티역', '판교테크노밸리']
+    }
+  ],
   createdAt: '2026-03-30T08:00:00.000Z',
   updatedAt: '2026-03-30T08:00:00.000Z'
 };
@@ -31,7 +51,7 @@ export const getRoutes = (): Route[] => {
       return [INITIAL_ROUTE];
     }
     const parsed: Route[] = JSON.parse(data);
-    if (!Array.isArray(parsed)) {
+    if (!Array.isArray(parsed) || parsed.length === 0) {
       saveRoutes([INITIAL_ROUTE]);
       return [INITIAL_ROUTE];
     }

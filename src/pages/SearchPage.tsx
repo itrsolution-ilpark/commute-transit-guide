@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Footprints, Bus, Train, Plus, ArrowLeft } from 'lucide-react';
-import { TransportType, TransitSearchItem } from '../types';
+import { Search, MapPin, Footprints, Plus } from 'lucide-react';
+import { TransitSearchItem, TransitSegment } from '../types';
 import { searchTransitStations } from '../services/transitApi';
 import { addRoute } from '../services/storage';
 import Header from '../components/Header';
@@ -20,9 +20,9 @@ export default function SearchPage() {
   const [selectedStart, setSelectedStart] = useState<TransitSearchItem | null>(null);
   const [selectedEnd, setSelectedEnd] = useState<TransitSearchItem | null>(null);
 
-  const [transportType, setTransportType] = useState<TransportType>('bus');
-  const [routeNo, setRouteNo] = useState<string>('9000번');
-  const [walkTimeMinutes, setWalkTimeMinutes] = useState<number>(5);
+  const [departureTime, setDepartureTime] = useState<string>('08:10');
+  const [arrivalTime, setArrivalTime] = useState<string>('08:55');
+  const [walkTimeMinutes, setWalkTimeMinutes] = useState<number>(7);
 
   const [isStartSearching, setIsStartSearching] = useState<boolean>(false);
   const [isEndSearching, setIsEndSearching] = useState<boolean>(false);
@@ -76,10 +76,6 @@ export default function SearchPage() {
     setSelectedStart(item);
     setStartKeyword(item.stationName);
     setStartItems([]);
-    if (item.routeNo) {
-      setRouteNo(item.routeNo);
-    }
-    setTransportType(item.transportType);
   };
 
   const handleSelectEnd = (item: TransitSearchItem) => {
@@ -92,33 +88,52 @@ export default function SearchPage() {
     e.preventDefault();
 
     if (!selectedStart && !startKeyword.trim()) {
-      setToastMessage('출발지 정류소명 또는 번호를 다시 확인해주세요.');
+      setToastMessage('검색 결과가 없습니다. 출발지와 도착지를 다시 확인해주세요.');
       setToastType('error');
       return;
     }
 
     if (!selectedEnd && !endKeyword.trim()) {
-      setToastMessage('도착지 정류소명 또는 번호를 다시 확인해주세요.');
+      setToastMessage('검색 결과가 없습니다. 출발지와 도착지를 다시 확인해주세요.');
       setToastType('error');
       return;
     }
 
-    const finalRouteName = routeName.trim() || `${startKeyword || (selectedStart?.stationName ?? '출발지')} ~ ${endKeyword || (selectedEnd?.stationName ?? '도착지')}`;
     const startName = selectedStart ? selectedStart.stationName : startKeyword;
-    const startStationId = selectedStart ? selectedStart.stationId : `st_${Date.now()}_1`;
     const endName = selectedEnd ? selectedEnd.stationName : endKeyword;
-    const endStationId = selectedEnd ? selectedEnd.stationId : `st_${Date.now()}_2`;
+    const finalRouteName = routeName.trim() || `${startName} ➔ ${endName} 출근길`;
+
+    const segments: TransitSegment[] = [
+      {
+        type: 'walk',
+        name: '도보 이동',
+        stations: []
+      },
+      {
+        type: 'subway',
+        name: selectedStart?.routeNo || '지하철 2호선',
+        startStation: startName,
+        endStation: '선릉역',
+        stations: [startName, '역삼역', '선릉역']
+      },
+      {
+        type: 'bus',
+        name: '9000번 버스',
+        startStation: '선릉역정류소',
+        endStation: endName,
+        stations: ['선릉역정류소', '한티역', endName]
+      }
+    ];
 
     addRoute({
       name: finalRouteName,
       startName,
-      startStationId,
       endName,
-      endStationId,
-      transportType,
-      routeNo: routeNo.trim() || '일반노선',
+      departureTime: departureTime.trim() || '08:10',
+      arrivalTime: arrivalTime.trim() || '08:55',
       walkTimeMinutes: Number(walkTimeMinutes),
       isNotificationOn: true,
+      segments,
     });
 
     navigate('/');
@@ -141,70 +156,46 @@ export default function SearchPage() {
                 type="text"
                 value={routeName}
                 onChange={(e) => setRouteName(e.target.value)}
-                placeholder="예: 회사 출근길, 학교 가는 길"
+                placeholder="예: 회사 출근길"
                 className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
               />
             </div>
 
-            {/* 교통수단 선택 */}
-            <div>
-              <label className="block text-sm font-bold text-[#0F172A] mb-2">교통수단</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTransportType('bus');
-                    if (!routeNo || routeNo.includes('선')) setRouteNo('9000번');
-                  }}
-                  className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-xl border text-sm font-bold transition-colors ${
-                    transportType === 'bus'
-                      ? 'bg-blue-50 border-[#2563EB] text-[#2563EB]'
-                      : 'bg-white border-[#CBD5E1] text-[#64748B]'
-                  }`}
-                >
-                  <Bus className="w-4 h-4" />
-                  <span>버스</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTransportType('subway');
-                    if (!routeNo || routeNo.includes('번')) setRouteNo('2호선');
-                  }}
-                  className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-xl border text-sm font-bold transition-colors ${
-                    transportType === 'subway'
-                      ? 'bg-emerald-50 border-[#10B981] text-[#10B981]'
-                      : 'bg-white border-[#CBD5E1] text-[#64748B]'
-                  }`}
-                >
-                  <Train className="w-4 h-4" />
-                  <span>지하철</span>
-                </button>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="departureTime" className="block text-sm font-bold text-[#0F172A] mb-1">
+                  출발 시각
+                </label>
+                <input
+                  id="departureTime"
+                  type="text"
+                  value={departureTime}
+                  onChange={(e) => setDepartureTime(e.target.value)}
+                  placeholder="08:10"
+                  className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm text-[#0F172A]"
+                />
               </div>
-            </div>
-
-            {/* 노선명 입력 */}
-            <div>
-              <label htmlFor="routeNo" className="block text-sm font-bold text-[#0F172A] mb-1">
-                노선명 / 번호
-              </label>
-              <input
-                id="routeNo"
-                type="text"
-                value={routeNo}
-                onChange={(e) => setRouteNo(e.target.value)}
-                placeholder="예: 9000번 또는 2호선"
-                required
-                className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
-              />
+              <div>
+                <label htmlFor="arrivalTime" className="block text-sm font-bold text-[#0F172A] mb-1">
+                  예상 도착 시각
+                </label>
+                <input
+                  id="arrivalTime"
+                  type="text"
+                  value={arrivalTime}
+                  onChange={(e) => setArrivalTime(e.target.value)}
+                  placeholder="08:55"
+                  className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm text-[#0F172A]"
+                />
+              </div>
             </div>
           </div>
 
-          {/* 출발지 / 정류소 검색 인풋 */}
+          {/* 출발지 / 도착지 검색 인풋 */}
           <div className="bg-white border border-[#E2E8F0] rounded-[12px] p-4 shadow-sm space-y-4 relative">
             <div>
               <label htmlFor="startInput" className="block text-sm font-bold text-[#0F172A] mb-1">
-                출발지 정류소/역 검색
+                출발지 명칭
               </label>
               <div className="relative">
                 <input
@@ -215,7 +206,7 @@ export default function SearchPage() {
                     setStartKeyword(e.target.value);
                     if (selectedStart) setSelectedStart(null);
                   }}
-                  placeholder="정류소명 또는 5자리 번호 입력 (예: 강남역)"
+                  placeholder="출발지 입력 (예: 자택, 강남역)"
                   required
                   className="w-full pl-10 pr-4 py-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
                 />
@@ -225,7 +216,6 @@ export default function SearchPage() {
                 )}
               </div>
 
-              {/* 자동완성 리스트 */}
               {startItems.length > 0 && (
                 <ul className="absolute z-20 left-4 right-4 mt-1 bg-white border border-[#E2E8F0] rounded-xl shadow-lg max-h-48 overflow-y-auto">
                   {startItems.map((item) => (
@@ -239,7 +229,7 @@ export default function SearchPage() {
                         {item.direction && <div className="text-xs text-[#64748B]">{item.direction}</div>}
                       </div>
                       <span className="text-xs font-semibold px-2 py-1 bg-gray-100 rounded text-[#64748B]">
-                        {item.stationId}
+                        {item.routeNo || item.transportType}
                       </span>
                     </li>
                   ))}
@@ -247,10 +237,9 @@ export default function SearchPage() {
               )}
             </div>
 
-            {/* 도착지 정류소/역 검색 */}
             <div>
               <label htmlFor="endInput" className="block text-sm font-bold text-[#0F172A] mb-1">
-                도착지 정류소/역 검색
+                도착지 명칭
               </label>
               <div className="relative">
                 <input
@@ -261,7 +250,7 @@ export default function SearchPage() {
                     setEndKeyword(e.target.value);
                     if (selectedEnd) setSelectedEnd(null);
                   }}
-                  placeholder="도착 정류소명 또는 역명 입력 (예: 판교역)"
+                  placeholder="도착지 입력 (예: 회사, 판교테크노밸리)"
                   required
                   className="w-full pl-10 pr-4 py-3 bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
                 />
@@ -271,7 +260,6 @@ export default function SearchPage() {
                 )}
               </div>
 
-              {/* 자동완성 리스트 */}
               {endItems.length > 0 && (
                 <ul className="absolute z-20 left-4 right-4 mt-1 bg-white border border-[#E2E8F0] rounded-xl shadow-lg max-h-48 overflow-y-auto">
                   {endItems.map((item) => (
@@ -285,7 +273,7 @@ export default function SearchPage() {
                         {item.direction && <div className="text-xs text-[#64748B]">{item.direction}</div>}
                       </div>
                       <span className="text-xs font-semibold px-2 py-1 bg-gray-100 rounded text-[#64748B]">
-                        {item.stationId}
+                        {item.routeNo || item.transportType}
                       </span>
                     </li>
                   ))}
@@ -294,12 +282,12 @@ export default function SearchPage() {
             </div>
           </div>
 
-          {/* 도보 소요 시간 (1~30분 슬라이더/인풋) */}
+          {/* 도보 소요 시간 슬라이더 */}
           <div className="bg-white border border-[#E2E8F0] rounded-[12px] p-4 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <label htmlFor="walkTimeRange" className="text-sm font-bold text-[#0F172A] flex items-center space-x-1.5">
                 <Footprints className="w-4 h-4 text-[#2563EB]" />
-                <span>출발지까지 도보 이동 소요 시간</span>
+                <span>도보 이동 소요 시간</span>
               </label>
               <span className="text-base font-extrabold text-[#2563EB]">{walkTimeMinutes}분</span>
             </div>
