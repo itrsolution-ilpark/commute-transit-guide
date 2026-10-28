@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Pretendard', system-ui, sans-serif;
+  background-color: #F8FAFC;
+  color: #0F172A;
+  margin: 0;
+  padding: 0;
+}
+
+/* 터치 영역 최소 44px 보장 및 접근성 포커스 스타일 */
+button, input, select, textarea {
+  min-height: 44px;
+}
+
+button:focus-visible, input:focus-visible {
+  outline: 2px solid #2563EB;
+  outline-offset: 2px;
+}
